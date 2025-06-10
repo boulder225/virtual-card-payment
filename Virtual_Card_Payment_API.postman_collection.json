@@ -1,0 +1,135 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Virtual Card Payment API",
+		"description": "Collection for testing the Virtual Card Payment API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Payment",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amount\": 100.00,\n    \"currency\": \"USD\",\n    \"description\": \"Test payment\",\n    \"userId\": \"USER123\",\n    \"ipAddress\": \"192.168.1.1\",\n    \"merchantId\": \"MERCH123\",\n    \"merchantName\": \"Test Merchant\",\n    \"merchantCategory\": \"RETAIL\",\n    \"merchantCountry\": \"US\",\n    \"merchantCity\": \"New York\",\n    \"merchantAddress\": \"123 Test St\",\n    \"merchantPostalCode\": \"10001\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/payments",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payments"
+					]
+				},
+				"description": "Create a new payment transaction"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Transaction Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/payments/{{transaction_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payments",
+						"{{transaction_id}}"
+					]
+				},
+				"description": "Get the status of a specific transaction"
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Balance",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/payments/balance/{{user_id}}",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payments",
+						"balance",
+						"{{user_id}}"
+					]
+				},
+				"description": "Get the current wallet balance for a user"
+			},
+			"response": []
+		},
+		{
+			"name": "List All Transactions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/payments",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payments"
+					]
+				},
+				"description": "Get a list of all transactions"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "transaction_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "USER123",
+			"type": "string"
+		}
+	]
+} 

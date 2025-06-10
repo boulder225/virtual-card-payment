@@ -37,4 +37,8 @@ out/
 .vscode/
 
 ### Mac OS ###
-.DS_Store 
+.DS_Store
+
+### Compiled files ###
+target/
+*.class 
