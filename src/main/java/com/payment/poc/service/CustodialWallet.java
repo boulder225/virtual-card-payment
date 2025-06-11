@@ -59,4 +59,10 @@ public class CustodialWallet implements WalletService {
     public boolean hasSufficientFunds(String userId, BigDecimal amount) {
         return getBalance(userId).compareTo(amount) >= 0;
     }
+
+    @Override
+    public void addFunds(String userId, BigDecimal amount) {
+        userBalances.put(userId, userBalances.getOrDefault(userId, BigDecimal.ZERO).add(amount));
+        System.out.printf("💰 Added $%.2f USDC to user: %s%n", amount, userId);
+    }
 }

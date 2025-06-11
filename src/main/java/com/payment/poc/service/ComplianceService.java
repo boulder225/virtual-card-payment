@@ -33,8 +33,10 @@ public class ComplianceService {
         if (ipAddress.startsWith("126.")) return "JP";    // Japan
         if (ipAddress.startsWith("91.185")) return "FR";  // France (blocked)
         if (ipAddress.startsWith("185.220")) return "DE"; // Germany (blocked)
+        if (ipAddress.startsWith("8.8.")) return "US";    // US (blocked)
+        if (ipAddress.startsWith("192.168.")) return "VN"; // Local network, default to VN for testing
         
-        return "VN"; // Default to Vietnam for demo
+        return "UNKNOWN"; // Return UNKNOWN for unrecognized IPs
     }
     
     public void logComplianceEvent(String userId, String ipAddress, String action) {

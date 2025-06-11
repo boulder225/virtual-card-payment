@@ -11,4 +11,5 @@ public interface WalletService {
     void releaseFunds(String userId, BigDecimal amount);
     BigDecimal getBalance(String userId);
     boolean hasSufficientFunds(String userId, BigDecimal amount);
+    void addFunds(String userId, BigDecimal amount);
 }

@@ -3,6 +3,7 @@ package com.payment.poc.controller;
 import com.payment.poc.model.PaymentRequest;
 import com.payment.poc.model.Transaction;
 import com.payment.poc.model.TransactionStatus;
+import com.payment.poc.model.FundWalletRequest;
 import com.payment.poc.service.*;
 import com.payment.poc.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,6 +126,19 @@ public class PaymentController {
             return ResponseEntity.ok(String.format("User %s balance: $%.2f USDC", userId, balance));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("User not found");
+        }
+    }
+    
+    /**
+     * Fund a user's wallet
+     */
+    @PostMapping("/fund")
+    public ResponseEntity<String> fundWallet(@RequestBody FundWalletRequest request) {
+        try {
+            walletService.addFunds(request.userId(), request.amount());
+            return ResponseEntity.ok(String.format("Added $%.2f USDC to user %s", request.amount(), request.userId()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to fund wallet: " + e.getMessage());
         }
     }
 }

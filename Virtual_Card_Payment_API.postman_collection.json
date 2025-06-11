@@ -18,7 +18,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"amount\": 100.00,\n    \"currency\": \"USD\",\n    \"description\": \"Test payment\",\n    \"userId\": \"USER123\",\n    \"ipAddress\": \"192.168.1.1\",\n    \"merchantId\": \"MERCH123\",\n    \"merchantName\": \"Test Merchant\",\n    \"merchantCategory\": \"RETAIL\",\n    \"merchantCountry\": \"US\",\n    \"merchantCity\": \"New York\",\n    \"merchantAddress\": \"123 Test St\",\n    \"merchantPostalCode\": \"10001\"\n}"
+					"raw": "{\n    \"amount\": 100.00,\n    \"currency\": \"USDC\",\n    \"userId\": \"USER123\",\n    \"ipAddress\": \"203.113.1.1\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/api/payments",
@@ -30,7 +30,7 @@
 						"payments"
 					]
 				},
-				"description": "Create a new payment transaction"
+				"description": "Create a new payment transaction. The IP address is used for country validation."
 			},
 			"response": []
 		},
@@ -50,7 +50,7 @@
 						"{{transaction_id}}"
 					]
 				},
-				"description": "Get the status of a specific transaction"
+				"description": "Get the status of a specific transaction. Status can be NEW, PENDING, SETTLED, or FAILED."
 			},
 			"response": []
 		},
@@ -71,7 +71,7 @@
 						"{{user_id}}"
 					]
 				},
-				"description": "Get the current wallet balance for a user"
+				"description": "Get the current USDC wallet balance for a user"
 			},
 			"response": []
 		},
@@ -90,7 +90,36 @@
 						"payments"
 					]
 				},
-				"description": "Get a list of all transactions"
+				"description": "Get a list of all transactions with their statuses"
+			},
+			"response": []
+		},
+		{
+			"name": "Add Balance",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amount\": 1000.00,\n    \"userId\": \"USER123\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/payments/fund",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"payments",
+						"fund"
+					]
+				},
+				"description": "Add USDC balance to a user's wallet"
 			},
 			"response": []
 		}
