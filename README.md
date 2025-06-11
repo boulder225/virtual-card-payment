@@ -1,9 +1,7 @@
 # Virtual Card Payment PoC
 
 ## Overview
-Minimalistic Spring Boot application demonstrating virtual card payment system for Asian markets.
-
-**Focus:** Addresses complex payment systems and async settlement complexity.
+Spring Boot application demonstrating virtual card payment system with IP-based compliance checks and async settlement.
 
 ## Payment Process Flow
 
@@ -111,7 +109,7 @@ curl -X POST http://localhost:8080/api/payments \
   -H "Content-Type: application/json" \
   -H "X-Forwarded-For: 203.113.123.45" \
   -d '{
-    "userId": "vietnam_user_1",
+    "userId": "USER123",
     "amount": 100.00
   }'
 ```
@@ -122,7 +120,7 @@ curl -X POST http://localhost:8080/api/payments \
   -H "Content-Type: application/json" \
   -H "X-Forwarded-For: 91.185.123.45" \
   -d '{
-    "userId": "france_user_1", 
+    "userId": "USER123", 
     "amount": 50.00
   }'
 ```
@@ -139,14 +137,14 @@ curl http://localhost:8080/api/payments
 
 ### 5. Check User Balance
 ```bash
-curl http://localhost:8080/api/balance/vietnam_user_1
+curl http://localhost:8080/api/payments/balance/USER123
 ```
 
 ## Running the Application
 
 ```bash
 # Build and run
-mvn spring-boot:run
+./gradlew bootRun
 
 # Application starts on http://localhost:8080
 # H2 Console available at http://localhost:8080/h2-console
@@ -157,7 +155,7 @@ mvn spring-boot:run
 | Component | Business Impact | Key Benefits |
 |-----------|-----------------|-------------------|
 | Unified Wallet Interface | Smooth custodial→non-custodial migration | Reduced technical debt |
-| Vietnam Geo-Rules | 2x faster market entry | Simplified regulatory compliance |
+| Geo-Rules | 2x faster market entry | Simplified regulatory compliance |
 | Reconciliation Service | 30% faster dispute resolution | Improved settlement flows |
 | Transaction State Management | Fewer failed transactions | Better async payment handling |
 
@@ -169,7 +167,7 @@ mvn spring-boot:run
 - **Monitoring:** What metrics would you track for reconciliation efficiency?
 
 ### Business Alignment  
-- **Vietnam Focus:** How does this accelerate Southeast Asian expansion?
+- **Market Focus:** How does this accelerate Southeast Asian expansion?
 - **Settlement Costs:** What's the business impact of 1% reconciliation failure rate?
 - **Compliance:** How would you extend this for other Asian markets (Korea, Japan)?
 
@@ -189,6 +187,184 @@ mvn spring-boot:run
 - IP-based geo-blocking
 - Configurable country rules
 - Audit logging for regulators
+
+### 🔒 Production-Grade IP Validation
+
+#### Network-Level Controls
+1. **API Gateway IP Filtering**
+   - Allowlist/denylist IP ranges using CIDR blocks
+   - Block transactions from high-risk regions
+   - Terraform-managed security groups
+
+2. **Reverse Proxy Configuration**
+   - Validate `X-Forwarded-For` headers
+   - Whitelist trusted proxy IPs (Cloudflare, load balancers)
+   - Prevent IP spoofing
+
+#### Application-Layer Validation
+3. **Real-Time IP Reputation**
+   - Integration with SEON/MaxMind for:
+     - Geolocation-based risk scoring
+     - VPN/Tor node detection
+     - ASN validation for data center IPs
+   - Redis-cached results for performance
+
+4. **Velocity Monitoring**
+   - Track IP transaction frequency
+   - Auto-block suspicious IPs
+   - Trigger manual reviews
+
+#### Fraud Detection Integration
+5. **Multi-Factor Risk Scoring**
+   - Device fingerprinting
+   - Behavioral biometrics
+   - Historical user patterns
+
+6. **Payment Processor Rules**
+   - Billing/IP geolocation matching
+   - Proxy/VPN detection
+   - IP reputation checks
+
+#### Compliance Safeguards
+7. **OFAC/Sanctions Screening**
+   - Cross-reference against sanctioned regions
+   - Comprehensive audit logging
+   - Compliance reporting
+
+8. **PCI DSS Alignment**
+   - IP tokenization
+   - Secure logging practices
+   - Data masking
+
+#### Technical Implementation
+
+##### Architecture Recommendations
+| Layer          | Tools/Techniques                          | Use Case                          |
+|----------------|-------------------------------------------|-----------------------------------|
+| Network        | AWS Security Groups, Terraform            | Allowlisting payment processor IPs |
+| Application    | Spring Boot ModHeaderFilter, Redis        | IP velocity checks                |
+| Observability  | Grafana/Prometheus, Elasticsearch         | Geo-distribution dashboards       |
+
+##### Implementation Checklist
+- Use `HttpServletRequest` with header validation for accurate client IP detection
+- Deploy rate limiting (100 requests/IP/minute) at the API gateway
+- Conduct quarterly penetration tests focusing on IP spoofing vulnerabilities
+
+##### Example: Redis-based Velocity Check
+```java
+@Service
+public class IpVelocityService {
+    private final RedisTemplate<String, Integer> redisTemplate;
+    
+    public boolean checkVelocity(String ip) {
+        String key = "txn_count:" + ip;
+        Long current = redisTemplate.opsForValue().increment(key);
+        if (current > 10) { // Threshold
+            blockIp(ip);
+            return false;
+        }
+        redisTemplate.expire(key, Duration.ofHours(1));
+        return true;
+    }
+}
+```
+
+##### Example: IP Reputation Check
+```java
+@Service
+public class IpReputationService {
+    private final MaxMindGeoIp2Client geoIpClient;
+    
+    public RiskScore checkIpReputation(String ip) {
+        GeoIp2Response response = geoIpClient.city(ip);
+        return RiskScore.builder()
+            .isVpn(response.isVpn())
+            .isTorExit(response.isTorExit())
+            .isDataCenter(response.isDataCenter())
+            .countryCode(response.getCountry().getIsoCode())
+            .build();
+    }
+}
+```
+
+## IP Detection and Filtering Patterns
+
+Robust IP detection and filtering are essential for controlling access to services, especially in regulated environments like fintech or virtual card payment systems. Below are key architectural and operational patterns for IP detection and enforcement.
+
+### **1. Network-Level IP Filtering**
+
+- **Firewall Rules & Security Groups:**  
+  Use network firewalls or cloud security groups to allow or block traffic based on source IP addresses. This is the first line of defense and prevents unauthorized traffic from ever reaching your application.
+
+- **API Gateway Filtering:**  
+  Modern API gateways (e.g., Envoy, AWS API Gateway) support IP allowlists/denylists, which can be configured to check the original source IP before routing requests to backend services.  
+  - Example: Envoy's `ClientTrafficPolicy` can extract the client IP from headers like `X-Forwarded-For`, considering trusted proxy hops.
+
+### **2. Application-Layer IP Validation**
+
+- **Middleware Checks:**  
+  Implement IP validation logic within your application's middleware. This allows you to apply business-specific rules, such as only allowing certain endpoints to be accessed from specific IP ranges.
+
+- **Header Parsing:**  
+  For applications behind proxies or load balancers, extract the client IP from trusted headers (e.g., `X-Forwarded-For`). Ensure you only trust these headers if set by your infrastructure to prevent spoofing.
+
+### **3. Pattern-Based and Dynamic Filtering**
+
+- **Pattern Sets:**  
+  Some platforms allow you to define pattern sets—collections of IPs or ranges to match against incoming requests. These can be updated dynamically and evaluated via custom expressions or policies.
+
+- **Geolocation and Risk-Based Filtering:**  
+  Enhance IP checks with geolocation or risk scoring (e.g., blocking high-risk countries or known bad actors). This is common in compliance-driven systems, where you may need to prevent access from sanctioned regions.
+
+### **4. Allowlist and Denylist Strategies**
+
+- **Allowlist (Whitelist):**  
+  Only explicitly approved IPs/ranges can access the service. This is highly secure but requires careful management to avoid locking out legitimate users.
+
+- **Denylist (Blacklist):**  
+  Block known malicious or unwanted IPs, allowing all others. This is easier to manage but less secure, as new threats may arise from unlisted IPs.
+
+- **Priority and Rule Management:**  
+  Some systems allow you to set the priority of allowlist and denylist rules, ensuring, for example, that denylist entries always override allowlist ones if there's a conflict.
+
+### **5. Monitoring and Maintenance**
+
+- **Logging and Auditing:**  
+  Log all denied or suspicious requests for compliance and forensic analysis. This is critical in regulated environments.
+
+- **Regular Updates:**  
+  Continuously monitor and update your IP lists and patterns based on new intelligence, business changes, or compliance requirements.
+
+### **Example: Envoy Gateway IP Detection Pattern**
+
+```yaml
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: ClientTrafficPolicy
+metadata:
+  name: enable-client-ip-detection
+spec:
+  clientIPDetection:
+    xForwardedFor:
+      numTrustedHops: 1
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: eg
+```
+
+### **Summary Table: IP Detection and Filtering Patterns**
+
+| Pattern Type         | Description                                                       | Use Case                            |
+|---------------------|-------------------------------------------------------------------|-------------------------------------|
+| Firewall/Security Group | Blocks/permits traffic at the network edge                      | First line of defense               |
+| API Gateway Filtering   | Enforces IP rules before requests reach backend services         | Centralized, scalable enforcement   |
+| Application Middleware  | Business logic validation, dynamic rule application              | Fine-grained, endpoint-specific     |
+| Pattern Sets            | Dynamic, expression-based matching of IPs/ranges                 | Easily updated, flexible policies   |
+| Allowlist/Denylist      | Explicitly permit or block IPs; can be prioritized               | Compliance, high-security scenarios |
+| Geolocation Filtering   | Block/allow based on country or risk profile                     | Regulatory compliance, fraud risk   |
+
+**Best Practice:**  
+Combine network-level filtering with application-layer checks and dynamic pattern management for defense-in-depth. Always ensure IP extraction is trustworthy, especially when using headers behind proxies. Regularly review and update your rules to adapt to evolving threats and compliance needs.
 
 ### ✅ Wallet Abstraction
 - Interface ready for non-custodial migration
@@ -239,7 +415,7 @@ graph TD
 ### Discussion (15 minutes)
 - Wallet interface migration strategy
 - HK provider resilience patterns
-- Vietnam compliance extension to other markets
+- Compliance extension to other markets
 - Production scaling considerations
 
 ### Closing (3 minutes)
@@ -247,6 +423,4 @@ graph TD
 
 ---
 
-**Built with:** Java 21, Spring Boot 3.2, H2 Database, Maven
-
-**Focus:** Demonstration of payment system architecture for Asian fintech platform.
+**Built with:** Java 21, Spring Boot 3.2, H2 Database, Gradle
