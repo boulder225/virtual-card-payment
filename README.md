@@ -287,6 +287,41 @@ public class IpReputationService {
 }
 ```
 
+### ✅ Wallet Abstraction
+- Interface ready for non-custodial migration
+- Mock custodial implementation
+- Balance and fund management
+
+### ✅ Reconciliation
+- Scheduled settlement checks (30s intervals)
+- Automatic failure recovery
+- HK provider integration simulation
+
+## Future Enhancements
+
+### Production Path
+```mermaid
+graph TD
+    A[PoC] --> B[Add Kafka Events]
+    A --> C[Real HK Provider API]
+    A --> D[Wallet Integration]
+    B --> E[Production Deployment]
+    C --> E
+    D --> E
+```
+
+### Security Additions
+- JWT authentication
+- Rate limiting
+- PCI-DSS compliance
+- Encrypted transaction logs
+
+### Monitoring
+- Prometheus metrics
+- Grafana dashboards  
+- Alert manager integration
+- Performance tracking
+
 ## IP Detection and Filtering Patterns
 
 Robust IP detection and filtering are essential for controlling access to services, especially in regulated environments like fintech or virtual card payment systems. Below are key architectural and operational patterns for IP detection and enforcement.
@@ -365,61 +400,6 @@ spec:
 
 **Best Practice:**  
 Combine network-level filtering with application-layer checks and dynamic pattern management for defense-in-depth. Always ensure IP extraction is trustworthy, especially when using headers behind proxies. Regularly review and update your rules to adapt to evolving threats and compliance needs.
-
-### ✅ Wallet Abstraction
-- Interface ready for non-custodial migration
-- Mock custodial implementation
-- Balance and fund management
-
-### ✅ Reconciliation
-- Scheduled settlement checks (30s intervals)
-- Automatic failure recovery
-- HK provider integration simulation
-
-## Future Enhancements
-
-### Production Path
-```mermaid
-graph TD
-    A[PoC] --> B[Add Kafka Events]
-    A --> C[Real HK Provider API]
-    A --> D[Wallet Integration]
-    B --> E[Production Deployment]
-    C --> E
-    D --> E
-```
-
-### Security Additions
-- JWT authentication
-- Rate limiting
-- PCI-DSS compliance
-- Encrypted transaction logs
-
-### Monitoring
-- Prometheus metrics
-- Grafana dashboards  
-- Alert manager integration
-- Performance tracking
-
-## Demo Script
-
-### Opening (30 seconds)
-*"This PoC demonstrates a modern approach to handling complex payment systems - async settlements, compliance requirements, and scaling for Asian markets."*
-
-### Demo Flow (12 minutes)
-1. Show Vietnam user success payment
-2. Demonstrate EU geo-blocking
-3. View reconciliation logs in real-time
-4. Check transaction state transitions
-
-### Discussion (15 minutes)
-- Wallet interface migration strategy
-- HK provider resilience patterns
-- Compliance extension to other markets
-- Production scaling considerations
-
-### Closing (3 minutes)
-*"If we had 2 more weeks, would you want me to focus on scaling this reconciliation system or integrating with the DeFi yield platform first?"*
 
 ---
 
