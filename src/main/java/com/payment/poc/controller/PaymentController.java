@@ -9,6 +9,7 @@ import com.payment.poc.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -36,14 +37,15 @@ public class PaymentController {
      * Shows Vietnam user success path and EU geo-blocking
      */
     @PostMapping
-    public ResponseEntity<?> processPayment(@RequestBody PaymentRequest request) {
+    public ResponseEntity<?> processPayment(@RequestBody PaymentRequest request, HttpServletRequest httpRequest) {
         try {
+            String clientIp = complianceService.getClientIpAddr(httpRequest);
             System.out.printf("💳 Processing payment: $%.2f for user %s from IP %s%n", 
-                             request.amount(), request.userId(), request.ipAddress());
+                             request.amount(), request.userId(), clientIp);
             
             // 1. Compliance check - geo-blocking for non-Asian countries
-            if (!complianceService.isTransactionAllowed(request.ipAddress())) {
-                complianceService.logComplianceEvent(request.userId(), request.ipAddress(), "BLOCKED");
+            if (!complianceService.isTransactionAllowed(clientIp)) {
+                complianceService.logComplianceEvent(request.userId(), clientIp, "BLOCKED");
                 return ResponseEntity.badRequest()
                     .body("Transaction not allowed from your location");
             }
@@ -61,8 +63,8 @@ public class PaymentController {
             Transaction transaction = new Transaction(
                 request.userId(), 
                 request.amount(), 
-                complianceService.getCountryFromIp(request.ipAddress()),
-                request.ipAddress()
+                complianceService.getCountryFromIp(clientIp),
+                clientIp
             );
             
             // 5. Authorize with Hong Kong provider
@@ -77,7 +79,7 @@ public class PaymentController {
                 transaction.setStatus(TransactionStatus.PENDING);
                 transaction = transactionRepo.save(transaction);
                 
-                complianceService.logComplianceEvent(request.userId(), request.ipAddress(), "AUTHORIZED");
+                complianceService.logComplianceEvent(request.userId(), clientIp, "AUTHORIZED");
                 
                 return ResponseEntity.ok(transaction);
                 

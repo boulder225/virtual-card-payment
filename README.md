@@ -5,6 +5,85 @@ Minimalistic Spring Boot application demonstrating virtual card payment system f
 
 **Focus:** Addresses complex payment systems and async settlement complexity.
 
+## Payment Process Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant PaymentController
+    participant ComplianceService
+    participant WalletService
+    participant HKProvider
+    participant ReconciliationService
+
+    Client->>PaymentController: POST /api/payments
+    Note over Client,PaymentController: IP from X-Forwarded-For header
+    PaymentController->>ComplianceService: Check IP Country
+    alt Country Not Allowed
+        ComplianceService-->>PaymentController: Blocked
+        PaymentController-->>Client: 400 Bad Request
+    else Country Allowed
+        PaymentController->>WalletService: Check Balance
+        alt Insufficient Funds
+            WalletService-->>PaymentController: Insufficient
+            PaymentController-->>Client: 400 Bad Request
+        else Sufficient Funds
+            WalletService->>WalletService: Lock Funds
+            PaymentController->>HKProvider: Authorize Payment
+            alt Authorization Failed
+                HKProvider-->>PaymentController: Failed
+                PaymentController->>WalletService: Release Funds
+                PaymentController-->>Client: 400 Bad Request
+            else Authorization Success
+                HKProvider-->>PaymentController: Success
+                PaymentController-->>Client: 200 OK (PENDING)
+                loop Every 30s
+                    ReconciliationService->>HKProvider: Check Settlement
+                    alt Settlement Success
+                        HKProvider-->>ReconciliationService: Settled
+                        ReconciliationService->>ReconciliationService: Update Status
+                    else Settlement Failed
+                        HKProvider-->>ReconciliationService: Failed
+                        ReconciliationService->>WalletService: Release Funds
+                        ReconciliationService->>ReconciliationService: Update Status
+                    end
+                end
+            end
+        end
+    end
+```
+
+### Key Process Steps
+
+1. **Compliance Check**
+   - Validates user's IP address from request headers
+   - Supports multiple proxy headers (X-Forwarded-For, Proxy-Client-IP, etc.)
+   - Currently supports Vietnam, South Korea, Japan, Kazakhstan, and Kyrgyzstan
+   - Logs compliance events for audit purposes
+
+2. **Balance Verification**
+   - Checks user's USDC wallet balance
+   - Ensures sufficient funds before proceeding
+   - Locks funds to prevent double-spending
+
+3. **Payment Authorization**
+   - Integrates with Hong Kong card provider
+   - Maximum transaction limit of $1000
+   - Simulates network latency (200ms)
+
+4. **Reconciliation**
+   - Runs every 30 seconds
+   - Checks pending transactions
+   - Updates status to SETTLED or FAILED
+   - Releases funds on failure
+
+### Transaction States
+
+- **NEW**: Initial state when transaction is created
+- **PENDING**: Payment authorized, waiting for settlement
+- **SETTLED**: Payment successfully completed
+- **FAILED**: Payment failed, funds released
+
 ## Architecture
 
 ```
@@ -30,10 +109,10 @@ src/main/java/com/payment/poc/
 ```bash
 curl -X POST http://localhost:8080/api/payments \
   -H "Content-Type: application/json" \
+  -H "X-Forwarded-For: 203.113.123.45" \
   -d '{
     "userId": "vietnam_user_1",
-    "amount": 100.00,
-    "ipAddress": "203.113.123.45"
+    "amount": 100.00
   }'
 ```
 
@@ -41,10 +120,10 @@ curl -X POST http://localhost:8080/api/payments \
 ```bash
 curl -X POST http://localhost:8080/api/payments \
   -H "Content-Type: application/json" \
+  -H "X-Forwarded-For: 91.185.123.45" \
   -d '{
     "userId": "france_user_1", 
-    "amount": 50.00,
-    "ipAddress": "91.185.123.45"
+    "amount": 50.00
   }'
 ```
 

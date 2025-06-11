@@ -14,11 +14,16 @@
 					{
 						"key": "Content-Type",
 						"value": "application/json"
+					},
+					{
+						"key": "X-Forwarded-For",
+						"value": "203.113.1.1",
+						"description": "Client IP address for country validation"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"amount\": 100.00,\n    \"currency\": \"USDC\",\n    \"userId\": \"USER123\",\n    \"ipAddress\": \"203.113.1.1\"\n}"
+					"raw": "{\n    \"amount\": 100.00,\n    \"userId\": \"USER123\"\n}"
 				},
 				"url": {
 					"raw": "{{base_url}}/api/payments",
@@ -30,7 +35,7 @@
 						"payments"
 					]
 				},
-				"description": "Create a new payment transaction. The IP address is used for country validation."
+				"description": "Create a new payment transaction. The client IP address is read from request headers (X-Forwarded-For, Proxy-Client-IP, etc.) for country validation."
 			},
 			"response": []
 		},

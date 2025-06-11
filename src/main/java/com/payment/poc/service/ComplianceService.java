@@ -1,6 +1,7 @@
 package com.payment.poc.service;
 
 import org.springframework.stereotype.Service;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
 
 /**
@@ -43,5 +44,35 @@ public class ComplianceService {
         String countryCode = getCountryFromIp(ipAddress);
         System.out.printf("📋 Compliance Log: User=%s, Country=%s, Action=%s, IP=%s%n", 
                          userId, countryCode, action, ipAddress);
+    }
+
+    /**
+     * Extract client IP address from request headers
+     * Handles various proxy headers and fallback to remote address
+     */
+    public String getClientIpAddr(HttpServletRequest request) {
+        String[] headers = {
+            "X-Forwarded-For",
+            "Proxy-Client-IP",
+            "WL-Proxy-Client-IP",
+            "HTTP_X_FORWARDED_FOR",
+            "HTTP_X_FORWARDED",
+            "HTTP_X_CLUSTER_CLIENT_IP",
+            "HTTP_CLIENT_IP",
+            "HTTP_FORWARDED_FOR",
+            "HTTP_FORWARDED",
+            "HTTP_VIA",
+            "REMOTE_ADDR"
+        };
+        
+        for (String header : headers) {
+            String ip = request.getHeader(header);
+            if (ip != null && ip.length() != 0 && !"unknown".equalsIgnoreCase(ip)) {
+                // If multiple IPs, take the first one
+                return ip.split(",")[0].trim();
+            }
+        }
+        
+        return request.getRemoteAddr();
     }
 }
